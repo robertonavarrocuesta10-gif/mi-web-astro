@@ -1,329 +1,72 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { supabase } from '../lib/supabase';
-
-interface Alumno {
-  id: string;
-  nombre: string;
-  nota: number;
-}
-//Obtiene los alumnos de supabase ordenados de mas a menos nota
-const { data, error } = await supabase
-  .from('alumnos')  //trabaja sobre tabla alumnos
-  .select('*')  //equivale a select * from alumnos
-  .order('nota', { ascending: false });
-
-const alumnos = data as Alumno[] | null;
 ---
 
 <Layout>
-  <main class="max-w-xl mx-auto p-6">
-    
-    <!-- Encabezado con título y botón de cerrar sesión -->
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold">Registro de Alumnos</h1>
-      <button 
-        id="btn-logout" 
-        class="text-sm bg-red-100 text-red-700 px-3 py-1.5 rounded hover:bg-red-200 transition font-medium">
-        Cerrar Sesión
+  <main class="max-w-md mx-auto p-6 mt-10">
+    <h1 class="text-2xl font-bold mb-6 text-center">Iniciar Sesión</h1>
+
+    <form id="form-login" class="flex flex-col gap-4 bg-gray-50 p-6 rounded-md border border-gray-200">
+      <div class="flex flex-col gap-1">
+        <label for="email" class="text-sm font-medium text-gray-700">Email:</label>
+        <input 
+          type="email" 
+          id="email" 
+          required 
+          class="border border-gray-300 rounded p-2"
+          placeholder="tu@email.com"
+        />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label for="password" class="text-sm font-medium text-gray-700">Contraseña:</label>
+        <input 
+          type="password" 
+          id="password" 
+          required 
+          class="border border-gray-300 rounded p-2"
+          placeholder="••••••••"
+        />
+      </div>
+
+      <button type="submit" class="bg-blue-600 text-white font-semibold py-2 rounded hover:bg-blue-700 transition mt-2">
+        Entrar
       </button>
-    </div>
-    <!--si supabase falla, error-->
-    {error && (
-      <p class="text-red-600 mb-4">Error al cargar los datos.</p>
-    )}
 
-    <!-- Lista de Alumnos -->
-    <ul id="lista-alumnos" class="space-y-3 mb-10">
-      {alumnos && alumnos.length > 0 ? (
-        //mapea cada alumno mostrando nombre
-        alumnos.map((alumno) => (
-          <li id={`alumno-${alumno.id}`} class="flex justify-between items-center border-b border-gray-200 pb-2">
-            <span class="text-gray-800 flex-1">{alumno.nombre}</span>
-            <div class="flex items-center gap-4">
-              <span class:list={[
-                'nota-valor',
-                'font-semibold',
-                {
-                  'text-green-600': alumno.nota >= 5,
-                  'text-red-600': alumno.nota < 5
-                }
-              ]}>
-                {alumno.nota}
-              </span>
-              <button 
-                data-id={alumno.id}
-                class="btn-borrar text-xs bg-red-50 text-red-600 px-2 py-1 rounded hover:bg-red-100 transition"
-              >
-                Borrar
-              </button>
-            </div>
-          </li>
-        ))
-      ) : (
-        <p id="mensaje-vacio" class="text-gray-500">No hay alumnos.</p>
-      )}
-    </ul>
-    
-    <div class="flex flex-col gap-8 border-t border-gray-300 pt-8">
-      
-      <!-- Formulario para Añadir Alumno -->
-      <div>
-        <h2 class="text-xl font-bold mb-4 text-gray-800">Añadir Alumno</h2>
-        <form id="form-anadir" class="flex flex-col gap-4 bg-gray-50 p-5 rounded-md border border-gray-200">
-          <div class="flex flex-col gap-1">
-            <label for="nuevo-nombre" class="text-sm font-medium text-gray-700">Nombre:</label>
-            <input 
-              type="text" 
-              id="nuevo-nombre" 
-              required 
-              placeholder="Nombre del alumno"
-              class="border border-gray-300 rounded p-2"
-            />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="nota-inicial" class="text-sm font-medium text-gray-700">Nota:</label>
-            <input 
-              type="number" 
-              id="nota-inicial" 
-              step="0.01" 
-              min="0" 
-              max="99.99" 
-              required 
-              placeholder="Ej: 7.25"
-              class="border border-gray-300 rounded p-2"
-            />
-          </div>
-          <button type="submit" class="bg-green-600 text-white font-semibold py-2 rounded hover:bg-green-700 transition">
-            Añadir Alumno
-          </button>
-          <p id="mensaje-anadir" class="text-sm font-medium hidden mt-1"></p>
-        </form>
-      </div>
-
-      <!-- Formulario para Modificar Nota -->
-      <div>
-        <h2 class="text-xl font-bold mb-4 text-gray-800">Modificar Nota</h2>
-        <form id="form-modificar" class="flex flex-col gap-4 bg-gray-50 p-5 rounded-md border border-gray-200">
-          <div class="flex flex-col gap-1">
-            <label for="alumno-select" class="text-sm font-medium text-gray-700">Selecciona el alumno:</label>
-            <select id="alumno-select" required class="border border-gray-300 rounded p-2 bg-white text-gray-800">
-              <option value="" disabled selected>Elige un alumno...</option>
-              //mapea los alumnos y muestra el nombre de los que hay con su nota para modificarlos
-              {alumnos && alumnos.map((alumno) => (
-                <option value={alumno.id}>{alumno.nombre} (Nota actual: {alumno.nota})</option>
-              ))}
-            </select>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="nueva-nota" class="text-sm font-medium text-gray-700">Nueva nota:</label>
-            <input 
-              type="number" 
-              id="nueva-nota" 
-              step="0.01" 
-              min="0" 
-              max="99.99" 
-              required 
-              placeholder="Ej: 8.50"
-              class="border border-gray-300 rounded p-2"
-            />
-          </div>
-          <button type="submit" class="bg-blue-600 text-white font-semibold py-2 rounded hover:bg-blue-700 transition">
-            Actualizar Nota
-          </button>
-          <p id="mensaje-estado" class="text-sm font-medium hidden mt-1"></p>
-        </form>
-      </div>
-
-    </div>
+      <p id="mensaje-error" class="text-sm font-medium text-red-600 hidden mt-2"></p>
+    </form>
   </main>
 </Layout>
 
 <script>
+  //Importa la conexion con supabase
   import { supabase } from '../lib/supabase';
 
-  // --- REFERENCIAS DEL HTML ---
-  const formModificar = document.getElementById('form-modificar') as HTMLFormElement;
-  const formAnadir = document.getElementById('form-anadir') as HTMLFormElement;
-  const listaAlumnos = document.getElementById('lista-alumnos') as HTMLUListElement;
-  const selectElement = document.getElementById('alumno-select') as HTMLSelectElement;
-  const btnLogout = document.getElementById('btn-logout');
+  const form = document.getElementById('form-login') as HTMLFormElement;
+  const mensajeError = document.getElementById('mensaje-error') as HTMLParagraphElement;
+  //Si hay formulario ejecuta el condicional
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      //Lee el email y la contraseña
+      const emailInput = document.getElementById('email') as HTMLInputElement;
+      const passwordInput = document.getElementById('password') as HTMLInputElement;
 
+      //Llamamos a Supabase para iniciar sesión
+      const { data, error } = await supabase.auth.signInWithPassword({
+        //El .value equivale al valor del email o contraseña en supabase
+        email: emailInput.value,    
+        password: passwordInput.value,
+      });
 
-  // --- AÑADIR ALUMNO ---
-  if (formAnadir) {
-    const mensajeAnadir = document.getElementById('mensaje-anadir') as HTMLParagraphElement;
-    
-    //Cuando se envia ejecuta el código
-    formAnadir.addEventListener('submit', async (e) => {
-      e.preventDefault();  //evita que la pagina se recargue
-      //Guarda en nombreInput y notaInput lo escrito en el html
-      const nombreInput = document.getElementById('nuevo-nombre') as HTMLInputElement;
-      const notaInput = document.getElementById('nota-inicial') as HTMLInputElement;
-      //Obtiene lo del HTML y lo guarda
-      const nombre = nombreInput.value;
-      const nota = parseFloat(notaInput.value);  //ademas lo convierte a float
-
-      mensajeAnadir.textContent = "Añadiendo...";
-      mensajeAnadir.className = "text-sm font-medium block text-blue-600 mt-1";
-      
-      //Lo inserta en Supabase
-      const { data, error } = await supabase
-        .from('alumnos')
-        .insert([{ nombre, nota }])
-        .select();
-
-      //Si hay error lo muestra, en caso contrario alumno añadido
       if (error) {
-        mensajeAnadir.textContent = "Error al añadir alumno.";
-        mensajeAnadir.className = "text-sm font-medium block text-red-600 mt-1";
-      } else if (data && data.length > 0) {
-        const nuevoAlumno = data[0];
-        mensajeAnadir.textContent = "¡Alumno añadido!";
-        mensajeAnadir.className = "text-sm font-medium block text-green-600 mt-1";
-        
-        //Quitar mensaje de "No hay alumnos" si existe
-        const mensajeVacio = document.getElementById('mensaje-vacio');
-        if (mensajeVacio) mensajeVacio.remove();
-
-        //Añadir a la lista HTML
-        //Crea un nuevo elemento
-        const li = document.createElement('li');
-        li.id = `alumno-${nuevoAlumno.id}`;
-        li.className = "flex justify-between items-center border-b border-gray-200 pb-2";
-        //Lo rellena como los que habia antes
-        li.innerHTML = `
-          <span class="text-gray-800 flex-1">${nuevoAlumno.nombre}</span>
-          <div class="flex items-center gap-4">
-            <span class="nota-valor font-semibold ${nuevoAlumno.nota >= 5 ? 'text-green-600' : 'text-red-600'}">
-              ${nuevoAlumno.nota}
-            </span>
-            <button data-id="${nuevoAlumno.id}" class="btn-borrar text-xs bg-red-50 text-red-600 px-2 py-1 rounded hover:bg-red-100 transition">
-              Borrar
-            </button>
-          </div>
-        `;
-        //Lo añade a la pantalla
-        listaAlumnos.appendChild(li);
-
-        // Añadir al desplegable (para modificar)
-        const option = document.createElement('option');
-        option.value = nuevoAlumno.id;
-        option.textContent = `${nuevoAlumno.nombre} (Nota actual: ${nuevoAlumno.nota})`;
-        selectElement.appendChild(option);
-        
-        //elimina que aparezca el nombre añadido recientemente
-        formAnadir.reset();
-        setTimeout(() => mensajeAnadir.style.display = 'none', 3000);
-      }
-    });
-  }
-
-
-  // --- MODIFICAR NOTA ---
-  if (formModificar) {
-    const mensajeModificar = document.getElementById('mensaje-estado') as HTMLParagraphElement;
-
-    formModificar.addEventListener('submit', async (e) => {
-      e.preventDefault(); //evita que recargue la página
-      const notaElement = document.getElementById('nueva-nota') as HTMLInputElement;
-      
-      //Guarda en alumnoId y nuevaNota lo seleccionado y la nota nueva del html
-      const alumnoId = selectElement.value;
-      const nuevaNota = parseFloat(notaElement.value);
-
-      mensajeModificar.textContent = "Guardando...";
-      mensajeModificar.className = "text-sm font-medium block text-blue-600 mt-1";
-
-      //Lo modifica en Supabase
-      const { data, error } = await supabase
-        .from('alumnos')
-        .update({ nota: nuevaNota })  //equivale a update alumnos set nota where id=alumno
-        .eq('id', alumnoId)
-        .select();
-
-        //Si hay error muestra error al actualizar y si no muestra actualizado
-      if (error) {
-        mensajeModificar.textContent = "Error al actualizar la nota.";
-        mensajeModificar.className = "text-sm font-medium block text-red-600 mt-1";
-      } else if (data && data.length > 0) {
-        mensajeModificar.textContent = "¡Actualizado!";
-        mensajeModificar.className = "text-sm font-medium block text-green-600 mt-1";
-        
-        //Cambia la nota que hubiera por la nueva con el color en caso de ser necesario
-        const listItem = document.getElementById(`alumno-${alumnoId}`);
-        if (listItem) {
-          const spanNota = listItem.querySelector('.nota-valor');
-          if (spanNota) {
-            spanNota.textContent = nuevaNota.toString();
-            spanNota.className = `nota-valor font-semibold ${nuevaNota >= 5 ? 'text-green-600' : 'text-red-600'}`;
-          }
-        }
-        
-        const option = selectElement.querySelector(`option[value="${alumnoId}"]`);
-        if (option) {
-          option.textContent = `${data[0].nombre} (Nota actual: ${nuevaNota})`;
-        }
-        
-        //Resetea el desplegable
-        formModificar.reset();
-        setTimeout(() => mensajeModificar.style.display = 'none', 3000);
-      }
-    });
-  }
-
-
-  // --- BORRAR ALUMNOS ---
-  if (listaAlumnos) {
-    //Si hay lista de alumnos creamos un evento de click para clickar sobre ellos
-    //En lugar de crear un evento para cada boton se crea uno para la lista de alumnos
-    listaAlumnos.addEventListener('click', async (e) => {
-      const target = e.target as HTMLElement;
-      
-      // Verificamos si se ha hecho clic en un botón de borrar
-      if (target.classList.contains('btn-borrar')) {
-        const alumnoId = target.getAttribute('data-id');
-        
-        //confirm es una funcion para la confirmacion del boton borrar
-        if (confirm('¿Estás seguro de que deseas borrar este alumno?')) {
-
-          //Eliminamos la columna de la base de datos de supabase
-          const { error } = await supabase
-            .from('alumnos')
-            .delete()   //Equivale a delete from alumnos where id=...
-            .eq('id', alumnoId);
-
-          if (!error) {
-            // Eliminar de la lista HTML, de la pantalla
-            const listItem = document.getElementById(`alumno-${alumnoId}`);
-            if (listItem) listItem.remove();
-
-            // Eliminar del select (del modificar)
-            const option = selectElement.querySelector(`option[value="${alumnoId}"]`);
-            if (option) option.remove();
-          } else {
-            alert('Hubo un error al borrar el alumno.');
-            target.textContent = "Borrar";
-            target.removeAttribute('disabled');
-          }
-        }
-      }
-    });
-  }
-
-
-  // --- CERRAR SESIÓN ---
-  if (btnLogout) {
-    //Añade un evento de click en el boton de cerrar sesion
-    btnLogout.addEventListener('click', async () => {
-      //Supabase elimina la sesion del usuario
-      const { error } = await supabase.auth.signOut();
-      //Si no hay error te manda a /login
-      if (!error) {
-        window.location.href = '/login';
+        mensajeError.textContent = "Error: " + "Credenciales invalidas";
+        mensajeError.style.display = "block";
       } else {
-        alert("Hubo un error al cerrar sesión");
+        //Si el login es exitoso, redirigimos a la página principal
+        window.location.href = '/alumnos';
       }
     });
   }
 </script>
+
